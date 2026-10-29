@@ -1,0 +1,75 @@
+@startuml
+!pragma layout smetana
+title Pizzeria szimulacio - osztalydiagram
+skinparam classAttributeIconSize 0
+hide empty members
+
+package pizzeria.model {
+  class Pizza <<record>> {
+    + id : int
+    + tipus : String
+    + keszIdo : long
+    + {static} MEREGPIRULA : Pizza
+    + meregpirula() : boolean
+  }
+
+  class Konfiguracio <<record>> {
+    + szakacsok : int
+    + futarok : int
+    + pultMeret : int
+    + rendelesek : int
+  }
+
+  class Statisztika {
+    - elkeszult : AtomicInteger
+    - kiszallitott : AtomicInteger
+    - osszVarakozasNano : AtomicLong
+    - kiszallitottIdk : Queue<Integer>
+    + elkeszult() : void
+    + kiszallitva(pizza : Pizza, varakozasNano : long) : void
+    + getElkeszult() : int
+    + getKiszallitott() : int
+    + atlagosVarakozasMs() : double
+    + getKiszallitottIdk() : List<Integer>
+  }
+
+  class Szakacs implements Runnable {
+    - rendelesek : BlockingQueue<Integer>
+    - pult : BlockingQueue<Pizza>
+    + run() : void
+  }
+
+  class Futar implements Runnable {
+    - pult : BlockingQueue<Pizza>
+    + run() : void
+  }
+
+  class Pizzeria {
+    - konfig : Konfiguracio
+    + futtat() : Statisztika
+  }
+}
+
+package pizzeria.main {
+  class Main {
+    + {static} main(args : String[]) : void
+  }
+}
+
+
+Pizzeria --> Konfiguracio
+Pizzeria ..> Szakacs : ExecutorService
+Pizzeria ..> Futar : ExecutorService
+Pizzeria ..> Statisztika : letrehozza
+Szakacs --> Statisztika
+Futar --> Statisztika
+Szakacs ..> Pizza : pult.put()
+Futar ..> Pizza : pult.take()
+Main ..> Pizzeria
+Main ..> Konfiguracio
+
+note bottom of Futar
+  MEREGPIRULA-ig olvas,
+  utana leall
+end note
+@enduml
